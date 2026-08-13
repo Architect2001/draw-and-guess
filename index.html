@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>你画我猜｜随机抽题小游戏</title>
+  <style>
+    :root{
+      --bg:#0f1115;
+      --card:#171a21;
+      --card2:#1e2430;
+      --text:#f2f4f8;
+      --muted:#aeb7c6;
+      --accent:#7aa2ff;
+      --accent2:#88e0c2;
+      --danger:#ff7b8b;
+      --line:#ffffff;
+      --border:#2a3140;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC",
+                   "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: linear-gradient(180deg, #0d1016 0%, #121620 100%);
+      color:var(--text);
+      min-height:100vh;
+    }
+    .wrap{
+      max-width:1100px;
+      margin:0 auto;
+      padding:24px;
+    }
+    h1{
+      margin:0 0 8px;
+      font-size:28px;
+      line-height:1.2;
+    }
+    .sub{
+      color:var(--muted);
+      margin-bottom:20px;
+      line-height:1.6;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: 340px 1fr;
+      gap:18px;
+    }
+    .card{
+      background:rgba(23,26,33,.92);
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:18px;
+      box-shadow:0 12px 24px rgba(0,0,0,.24);
+    }
+    .section-title{
+      font-size:16px;
+      margin:0 0 12px;
+      color:#dbe5ff;
+    }
+    button{
+      appearance:none;
+      border:none;
+      border-radius:12px;
+      padding:12px 16px;
+      color:#fff;
+      background:var(--accent);
+      cursor:pointer;
+      font-size:15px;
+      font-weight:600;
+      transition: transform .06s ease, opacity .2s ease;
+    }
+    button:active{ transform: scale(.98); }
+    button.secondary{ background:#2a3140; color:#eef2ff;}
+    button.good{ background:#2f8f77; }
+    button.warn{ background:#b84e61; }
+    .btns{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+    }
+    .prompt-box{
+      margin-top:14px;
+      padding:16px;
+      border:1px dashed #3a4560;
+      border-radius:14px;
+      background:linear-gradient(180deg, #1a2130 0%, #171d29 100%);
+      min-height:110px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      gap:8px;
+    }
+    .category{
+      color:var(--accent2);
+      font-size:13px;
+      letter-spacing:.06em;
+      text-transform:uppercase;
+    }
+    .prompt{
+      font-size:28px;
+      font-weight:700;
+      line-height:1.2;
+      word-break:break-word;
+    }
+    .mini{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.6;
+    }
+    .timer{
+      margin-top:16px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:14px 16px;
+      border-radius:14px;
+      background:#1a2130;
+      border:1px solid #2f3850;
+    }
+    .time{
+      font-size:42px;
+      font-weight:800;
+      letter-spacing:.03em;
+    }
+    .time.danger{ color:var(--danger); }
+    .canvas-wrap{
+      position:relative;
+      border-radius:18px;
+      overflow:hidden;
+      background:#fff;
+      border:1px solid #dce3f5;
+    }
+    canvas{
+      display:block;
+      width:100%;
+      height:560px;
+      background:#fff;
+      touch-action:none;
+      cursor:crosshair;
+    }
+    .tools{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      margin-top:12px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    input[type="range"]{
+      width:140px;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:9px 12px;
+      border-radius:999px;
+      background:#1b2231;
+      border:1px solid #2b3448;
+      color:#dbe5ff;
+      font-size:14px;
+    }
+    .footer-note{
+      margin-top:14px;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.7;
+    }
+    .hidden-answer{
+      filter: blur(10px);
+      user-select:none;
+    }
+    .toggle{
+      font-size:13px;
+      color:#c9d3e8;
+      cursor:pointer;
+      text-decoration:underline;
+      width:max-content;
+    }
+    @media (max-width: 900px){
+      .grid{ grid-template-columns:1fr; }
+      canvas{ height:420px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>你画我猜｜随机抽题小游戏</h1>
+    <div class="sub">
+      规则很简单：点“随机抽题”，出题人看到题目后，<b>20 秒内</b>用右侧白板快速画一个抽象简笔画。<br>
+      不许写字，不许画太具体。就主打一个抽象。
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2 class="section-title">抽题区</h2>
+        <div class="btns">
+          <button id="drawPromptBtn">随机抽题</button>
+          <button id="nextPromptBtn" class="secondary">换一个</button>
+        </div>
+
+        <div class="prompt-box">
+          <div id="category" class="category">等待抽题</div>
+          <div id="prompt" class="prompt">点一下“随机抽题”</div>
+          <div id="toggleAnswer" class="toggle" style="display:none;">隐藏 / 显示题目</div>
+          <div class="mini">建议：一题一画，20 秒画完，越抽象越有节目效果。</div>
+        </div>
+
+        <div class="timer">
+          <div>
+            <div class="mini">倒计时</div>
+            <div id="time" class="time">20</div>
+          </div>
+          <div class="btns">
+            <button id="startBtn" class="good">开始</button>
+            <button id="pauseBtn" class="secondary">暂停</button>
+            <button id="resetBtn" class="warn">重置</button>
+          </div>
+        </div>
+
+        <div class="footer-note">
+          小提醒：<br>
+          1）抽题后先看一眼题目，再点开始。<br>
+          2）如果怕被猜题的人偷看，可以先把题目隐藏。<br>
+          3）画面太乱就点“清空画板”。
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="section-title">20 秒简笔画板</h2>
+        <div class="canvas-wrap">
+          <canvas id="board"></canvas>
+        </div>
+
+        <div class="tools">
+          <div class="row">
+            <button id="clearBtn" class="secondary">清空画板</button>
+            <button id="saveBtn" class="secondary">保存图片</button>
+          </div>
+          <div class="row">
+            <span class="pill">线条粗细 <input id="sizeRange" type="range" min="2" max="14" value="5" /></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const prompts = {
+    动物: ["猫", "狗", "兔子", "乌龟", "鱼", "企鹅", "大象", "长颈鹿", "鸡", "熊猫", "鸭子", "狐狸"],
+    食物: ["西瓜", "汉堡", "披萨", "冰淇淋", "奶茶", "鸡腿", "面条", "寿司", "鸡蛋", "苹果", "草莓", "蛋糕"],
+    日常: ["雨伞", "牙刷", "手机", "电脑", "拖鞋", "枕头", "眼镜", "门", "电风扇", "灯泡", "剪刀", "杯子"],
+    交通: ["汽车", "自行车", "火车", "飞机", "轮船", "红绿灯", "地铁", "摩托车"],
+    场景: ["上班", "睡觉", "洗澡", "考试", "跑步", "做饭", "钓鱼", "打游戏", "追剧", "逛街"],
+    奇怪一点: ["秃头", "内卷", "熬夜", "emo", "社恐", "发疯", "摸鱼", "加班", "暴富", "恋爱脑"]
+  };
+
+  let currentPrompt = null;
+  let isAnswerHidden = false;
+
+  const categoryEl = document.getElementById("category");
+  const promptEl = document.getElementById("prompt");
+  const toggleAnswerEl = document.getElementById("toggleAnswer");
+
+  function randomPick(arr){
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  function drawPrompt(){
+    const categories = Object.keys(prompts);
+    const category = randomPick(categories);
+    const prompt = randomPick(prompts[category]);
+    currentPrompt = { category, prompt };
+    categoryEl.textContent = category;
+    promptEl.textContent = prompt;
+    promptEl.classList.remove("hidden-answer");
+    isAnswerHidden = false;
+    toggleAnswerEl.style.display = "inline-block";
+  }
+
+  document.getElementById("drawPromptBtn").addEventListener("click", drawPrompt);
+  document.getElementById("nextPromptBtn").addEventListener("click", drawPrompt);
+
+  toggleAnswerEl.addEventListener("click", () => {
+    if (!currentPrompt) return;
+    isAnswerHidden = !isAnswerHidden;
+    promptEl.classList.toggle("hidden-answer", isAnswerHidden);
+  });
+
+  let total = 20;
+  let remaining = 20;
+  let timerId = null;
+
+  const timeEl = document.getElementById("time");
+
+  function renderTime(){
+    timeEl.textContent = remaining;
+    timeEl.classList.toggle("danger", remaining <= 5);
+  }
+
+  function startTimer(){
+    if (timerId) return;
+    timerId = setInterval(() => {
+      remaining -= 1;
+      renderTime();
+      if (remaining <= 0){
+        clearInterval(timerId);
+        timerId = null;
+        remaining = 0;
+        renderTime();
+        try { navigator.vibrate && navigator.vibrate([120, 50, 120]); } catch(e){}
+        alert("时间到！");
+      }
+    }, 1000);
+  }
+
+  function pauseTimer(){
+    if (timerId){
+      clearInterval(timerId);
+      timerId = null;
+    }
+  }
+
+  function resetTimer(){
+    pauseTimer();
+    remaining = total;
+    renderTime();
+  }
+
+  document.getElementById("startBtn").addEventListener("click", startTimer);
+  document.getElementById("pauseBtn").addEventListener("click", pauseTimer);
+  document.getElementById("resetBtn").addEventListener("click", resetTimer);
+  renderTime();
+
+  const canvas = document.getElementById("board");
+  const ctx = canvas.getContext("2d");
+  let drawing = false;
+  let lineSize = 5;
+
+  function fitCanvas(){
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.floor(rect.width * dpr);
+    canvas.height = Math.floor(rect.height * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.strokeStyle = "#111";
+    ctx.lineWidth = lineSize;
+  }
+
+  function getPos(e){
+    const rect = canvas.getBoundingClientRect();
+    if (e.touches && e.touches[0]) {
+      return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
+    }
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  }
+
+  function startDraw(e){
+    drawing = true;
+    const { x, y } = getPos(e);
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+  }
+
+  function moveDraw(e){
+    if (!drawing) return;
+    const { x, y } = getPos(e);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  }
+
+  function endDraw(){
+    drawing = false;
+    ctx.closePath();
+  }
+
+  canvas.addEventListener("mousedown", startDraw);
+  canvas.addEventListener("mousemove", moveDraw);
+  window.addEventListener("mouseup", endDraw);
+  canvas.addEventListener("touchstart", startDraw, { passive: true });
+  canvas.addEventListener("touchmove", moveDraw, { passive: true });
+  window.addEventListener("touchend", endDraw);
+
+  document.getElementById("sizeRange").addEventListener("input", (e) => {
+    lineSize = Number(e.target.value);
+    ctx.lineWidth = lineSize;
+  });
+
+  document.getElementById("clearBtn").addEventListener("click", () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  });
+
+  document.getElementById("saveBtn").addEventListener("click", () => {
+    const link = document.createElement("a");
+    link.download = "你画我猜_简笔画.png";
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  });
+
+  window.addEventListener("resize", () => {
+    const old = canvas.toDataURL();
+    const img = new Image();
+    img.onload = () => {
+      fitCanvas();
+      ctx.drawImage(img, 0, 0, canvas.getBoundingClientRect().width, canvas.getBoundingClientRect().height);
+    };
+    img.src = old;
+  });
+
+  fitCanvas();
+</script>
+</body>
+</html>
