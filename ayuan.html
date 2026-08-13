@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>阿砚出题｜你画我猜</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0f1115;color:#f3f5f8;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;min-height:100vh;display:grid;place-items:center}.wrap{width:min(92vw,760px)}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.tag{font-size:14px;color:#9ca8bb}.card{background:#171a21;border:1px solid #2a3140;border-radius:22px;padding:18px;box-shadow:0 16px 40px #0006}.board{background:#fff;border-radius:18px;overflow:hidden;aspect-ratio:1/1;display:grid;place-items:center}svg{width:92%;height:92%}.hint{margin:16px 2px 12px;color:#aeb7c6;font-size:14px}.answer{display:flex;gap:10px}.answer input{flex:1;border:1px solid #303849;background:#11151d;color:#fff;border-radius:14px;padding:14px 16px;font-size:16px;outline:none}.answer button{border:0;background:#7aa2ff;color:#fff;border-radius:14px;padding:0 20px;font-size:16px;font-weight:700}.msg{height:30px;margin-top:12px;font-size:15px}.back{display:inline-block;margin-top:16px;color:#9fb8ff;text-decoration:none}.title{font-weight:800;font-size:22px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><div class="title">阿砚出题</div><div class="tag">20 秒 · 五笔</div></div>
+  <div class="card">
+    <div class="board">
+      <svg viewBox="0 0 600 600" aria-label="阿砚的简笔画">
+        <g fill="none" stroke="#111" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M120 245 Q300 70 480 245"/>
+          <path d="M120 245 Q300 305 480 245"/>
+          <path d="M195 255 L280 350"/>
+          <path d="M405 255 L320 350"/>
+          <path d="M300 325 C282 325 276 342 283 355 C290 369 310 369 317 355 C324 342 318 325 300 325 L300 455 L260 525 L300 455 L342 525"/>
+        </g>
+      </svg>
+    </div>
+    <div class="hint">阿砚已经画完了。你猜。</div>
+    <div class="answer">
+      <input id="guess" autocomplete="off" placeholder="输入答案…" />
+      <button id="submit">提交</button>
+    </div>
+    <div id="msg" class="msg"></div>
+  </div>
+  <a class="back" href="./">← 回主游戏</a>
+</div>
+<script>
+const accepted=["6ZmN6JC95Lye"];
+const decode=s=>decodeURIComponent(escape(atob(s)));
+function check(){const v=document.getElementById('guess').value.trim().replace(/\s+/g,'');const ok=accepted.some(x=>v===decode(x));const m=document.getElementById('msg');m.textContent=ok?'猜对了。轮到你画。':'不对，再猜。';m.style.color=ok?'#88e0c2':'#ff8c9a';}
+document.getElementById('submit').onclick=check;document.getElementById('guess').addEventListener('keydown',e=>{if(e.key==='Enter')check()});
+</script>
+</body>
+</html>
